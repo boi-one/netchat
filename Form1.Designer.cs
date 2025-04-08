@@ -32,12 +32,12 @@
             port = new Label();
             ipfield = new TextBox();
             portfield = new TextBox();
-            chatbox = new TextBox();
             join = new Button();
             host = new Button();
             input = new TextBox();
             name = new Label();
             namefield = new TextBox();
+            chatbox = new RichTextBox();
             SuspendLayout();
             // 
             // ip
@@ -72,15 +72,7 @@
             portfield.Name = "portfield";
             portfield.Size = new Size(100, 23);
             portfield.TabIndex = 3;
-            // 
-            // chatbox
-            // 
-            chatbox.Location = new Point(12, 41);
-            chatbox.Multiline = true;
-            chatbox.Name = "chatbox";
-            chatbox.ReadOnly = true;
-            chatbox.Size = new Size(776, 373);
-            chatbox.TabIndex = 4;
+            portfield.TextChanged += portfield_TextChanged;
             // 
             // join
             // 
@@ -127,17 +119,26 @@
             namefield.TabIndex = 9;
             namefield.TextChanged += textBox2_TextChanged_1;
             // 
+            // chatbox
+            // 
+            chatbox.Location = new Point(15, 42);
+            chatbox.Name = "chatbox";
+            chatbox.Size = new Size(773, 372);
+            chatbox.TabIndex = 10;
+            chatbox.Text = "";
+            chatbox.TextChanged += richTextBox1_TextChanged;
+            // 
             // netchatform
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(chatbox);
             Controls.Add(namefield);
             Controls.Add(name);
             Controls.Add(input);
             Controls.Add(host);
             Controls.Add(join);
-            Controls.Add(chatbox);
             Controls.Add(portfield);
             Controls.Add(ipfield);
             Controls.Add(port);
@@ -155,11 +156,11 @@
         private Label port;
         private TextBox ipfield;
         private TextBox portfield;
-        private TextBox chatbox;
         private Button join;
         private Button host;
         private TextBox input;
         private Label name;
         private TextBox namefield;
+        private RichTextBox chatbox;
     }
 }
