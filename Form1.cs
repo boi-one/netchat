@@ -209,6 +209,7 @@ namespace netchat
                             if(InvokeRequired) Invoke(() => LocalNewLine(status.ToString() + ": " + reason, Color.Blue));
                             break;
                         case NetIncomingMessageType.Data:
+                            //incoming 2 times
                             string chat = im.ReadString();
                             if (InvokeRequired) Invoke(() => LocalNewLine(chat));
                             break;
