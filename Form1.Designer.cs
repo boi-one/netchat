@@ -63,13 +63,16 @@
             // 
             ipfield.Location = new Point(547, 12);
             ipfield.Name = "ipfield";
+            ipfield.PlaceholderText = "127.0.0.1";
             ipfield.Size = new Size(100, 23);
             ipfield.TabIndex = 2;
+            ipfield.TextChanged += ipfield_TextChanged;
             // 
             // portfield
             // 
             portfield.Location = new Point(688, 12);
             portfield.Name = "portfield";
+            portfield.PlaceholderText = "8421";
             portfield.Size = new Size(100, 23);
             portfield.TabIndex = 3;
             portfield.TextChanged += portfield_TextChanged;

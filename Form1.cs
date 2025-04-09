@@ -51,7 +51,9 @@ namespace netchat
                 ipfield.Enabled = false;
                 portfield.Enabled = false;
                 input.Enabled = false; //remove if the host also wants to talk
-                new Thread(() => Server("127.0.0.1", /*Convert.ToInt32(portfield.Text)*/8888)).Start();
+                Thread serverThread = new Thread(() => Server("127.0.0.1", /*Convert.ToInt32(portfield.Text)*/8888));
+                serverThread.IsBackground = true;
+                serverThread.Start();
             }
         }
 
@@ -109,7 +111,7 @@ namespace netchat
 
             chatbox.AppendText(text + "\r\n");
             Console.WriteLine(text);
-            chatbox.SelectionColor = RichTextBox.DefaultForeColor;
+            chatbox.SelectionColor = DefaultForeColor;
         }
 
         private void Server(string ip, int port)
@@ -147,8 +149,8 @@ namespace netchat
                             break;
                         case NetIncomingMessageType.Data:
                             string c = im.ReadString();
-                            if(InvokeRequired) Invoke(() => LocalNewLine("Broadcasting '" + c + "'", Color.Gray));
-                            if(InvokeRequired) Invoke(() => ScrollDown());
+                            if (InvokeRequired) Invoke(() => LocalNewLine("Broadcasting '" + c + "'", Color.Gray));
+                            if (InvokeRequired) Invoke(() => ScrollDown());
 
                             foreach (NetConnection nc in netServer.Connections)
                             {
@@ -157,13 +159,6 @@ namespace netchat
                             }
                             List<NetConnection> all = netServer.Connections;
                             all.Remove(im.SenderConnection);
-
-                            if (all.Count > 0)
-                            {
-                                NetOutgoingMessage om = netServer.CreateMessage();
-                                om.Write(NetUtility.ToHexString(im.SenderConnection.RemoteUniqueIdentifier) + " said: " + c);
-                                netServer.SendMessage(om, all, NetDeliveryMethod.ReliableOrdered, 0);
-                            }
                             break;
                         default:
                             if (InvokeRequired) Invoke(() => LocalNewLine("Unhandled type: " + im.MessageType + " " + im.LengthBytes + " bytes " + im.DeliveryMethod + "|" + im.SequenceChannel, Color.Red));
@@ -179,12 +174,15 @@ namespace netchat
             netClient = new NetClient(new("netchat"));
             netClient.Start();
             netClient.Connect(/*ipfield.Text*/"127.0.0.1", 8888/*Convert.ToInt32(portfield.Text)*/);
-            new Thread(() =>
+            Thread clientThread = new Thread(() =>
             {
                 ListenForMessages();
-            }).Start();
+            });
+            clientThread.IsBackground = true;
+            clientThread.Start();
         }
 
+        static int i;
         private void ListenForMessages()
         {
             NetIncomingMessage im;
@@ -205,11 +203,10 @@ namespace netchat
                         case NetIncomingMessageType.StatusChanged:
                             NetConnectionStatus status = (NetConnectionStatus)im.ReadByte();
 
-                            string reason = im.ReadString();
-                            if(InvokeRequired) Invoke(() => LocalNewLine(status.ToString() + ": " + reason, Color.Blue));
+                            string reason = im.ToString();
+                            if (InvokeRequired) Invoke(() => LocalNewLine(status.ToString() + ": " + reason, Color.Blue));
                             break;
                         case NetIncomingMessageType.Data:
-                            //incoming 2 times
                             string chat = im.ReadString();
                             if (InvokeRequired) Invoke(() => LocalNewLine(chat));
                             break;
@@ -246,9 +243,9 @@ namespace netchat
 
         }
 
-        private void exitButton_Click(object sender, EventArgs e)
+        private void ipfield_TextChanged(object sender, EventArgs e)
         {
-            System.Windows.Forms.Application.Exit();
+
         }
     }
 }
