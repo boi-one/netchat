@@ -5,12 +5,12 @@ using System.Windows.Forms;
 
 namespace netchat
 {
-    public partial class netchatform : Form
+    public partial class NetChatForm : Form
     {
         private static NetServer netServer;
         private static NetClient netClient;
 
-        public netchatform()
+        public NetChatForm()
         {
             InitializeComponent();
             input.KeyDown += new KeyEventHandler(BoxKeyDown);
@@ -51,7 +51,24 @@ namespace netchat
                 ipfield.Enabled = false;
                 portfield.Enabled = false;
                 input.Enabled = false; //remove if the host also wants to talk
-                new Thread(() => Server("127.0.0.1", Convert.ToInt32(portfield.Text))).Start();
+                new Thread(() => Server("127.0.0.1", /*Convert.ToInt32(portfield.Text)*/8888)).Start();
+            }
+        }
+
+        private void join_Click(object sender, EventArgs e)
+        {
+            if (portfield.Text.Length < 4)
+            {
+                SystemSounds.Exclamation.Play();
+                MessageBox.Show("Needs to be a valid port.", "Warning.", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            else
+            {
+                host.Enabled = false;
+                join.Enabled = false;
+                ipfield.Enabled = false;
+                portfield.Enabled = false;
+                Client();
             }
         }
 
@@ -73,6 +90,13 @@ namespace netchat
         private void SendMessage(string message)
         {
             netClient.SendMessage(netClient.CreateMessage(message), NetDeliveryMethod.ReliableOrdered);
+            ScrollDown();
+        }
+
+        private void ScrollDown()
+        {
+            chatbox.SelectionStart = chatbox.Text.Length;
+            chatbox.ScrollToCaret();
         }
 
         private void LocalNewLine(string text, Color textColor = default)
@@ -84,16 +108,17 @@ namespace netchat
             chatbox.SelectionColor = textColor;
 
             chatbox.AppendText(text + "\r\n");
+            Console.WriteLine(text);
             chatbox.SelectionColor = RichTextBox.DefaultForeColor;
         }
 
         private void Server(string ip, int port)
         {
-            if (InvokeRequired) Invoke(() => LocalNewLine("hosting...", Color.Yellow));
+            if (InvokeRequired) Invoke(() => LocalNewLine("hosting...", Color.DarkGoldenrod));
 
             NetPeerConfiguration config = new NetPeerConfiguration("netchat");
             config.MaximumConnections = 5;
-            config.Port = 5839;
+            config.Port = port;
             netServer = new NetServer(config);
 
             netServer.Start();
@@ -116,15 +141,15 @@ namespace netchat
                             if (status == NetConnectionStatus.Connected)
                             {
                                 if (InvokeRequired) Invoke(() => LocalNewLine("Client connected", Color.Green));
-                                Console.WriteLine("Client connected");
                             }
 
                             UpdateConnectionsList();
                             break;
                         case NetIncomingMessageType.Data:
                             string c = im.ReadString();
-                            LocalNewLine("Broadcasting '" + c + "'", Color.Gray);
-                            Console.WriteLine(("Broadcasting '" + c + "'", Color.Gray));
+                            if(InvokeRequired) Invoke(() => LocalNewLine("Broadcasting '" + c + "'", Color.Gray));
+                            if(InvokeRequired) Invoke(() => ScrollDown());
+
                             foreach (NetConnection nc in netServer.Connections)
                             {
                                 //if (im.SenderConnection == nc) continue;
@@ -142,11 +167,10 @@ namespace netchat
                             break;
                         default:
                             if (InvokeRequired) Invoke(() => LocalNewLine("Unhandled type: " + im.MessageType + " " + im.LengthBytes + " bytes " + im.DeliveryMethod + "|" + im.SequenceChannel, Color.Red));
-                            Console.WriteLine("Unhandled type: " + im.MessageType + " " + im.LengthBytes + " bytes " + im.DeliveryMethod + "|" + im.SequenceChannel, Color.Red);
                             break;
                     }
                 }
-                //Thread.Sleep(1);
+                Thread.Sleep(1);
             }
         }
 
@@ -154,12 +178,11 @@ namespace netchat
         {
             netClient = new NetClient(new("netchat"));
             netClient.Start();
-            netClient.Connect(ip.Text, Convert.ToInt32(port.Text));
+            netClient.Connect(/*ipfield.Text*/"127.0.0.1", 8888/*Convert.ToInt32(portfield.Text)*/);
             new Thread(() =>
             {
                 ListenForMessages();
             }).Start();
-            LocalNewLine("successfuly joined!", Color.Blue);
         }
 
         private void ListenForMessages()
@@ -177,21 +200,20 @@ namespace netchat
                         case NetIncomingMessageType.WarningMessage:
                         case NetIncomingMessageType.VerboseDebugMessage:
                             string text = im.ReadString();
-                            LocalNewLine(text);
+                            if (InvokeRequired) Invoke(() => LocalNewLine(text));
                             break;
                         case NetIncomingMessageType.StatusChanged:
                             NetConnectionStatus status = (NetConnectionStatus)im.ReadByte();
 
                             string reason = im.ReadString();
-                            Console.WriteLine(status.ToString() + ": " + reason);
-
+                            if(InvokeRequired) Invoke(() => LocalNewLine(status.ToString() + ": " + reason, Color.Blue));
                             break;
                         case NetIncomingMessageType.Data:
                             string chat = im.ReadString();
-                            LocalNewLine(chat);
+                            if (InvokeRequired) Invoke(() => LocalNewLine(chat));
                             break;
                         default:
-                            LocalNewLine("Unhandled type: " + im.MessageType + " " + im.LengthBytes + " bytes", Color.Red);
+                            if (InvokeRequired) Invoke(() => LocalNewLine("Unhandled type: " + im.MessageType + " " + im.LengthBytes + " bytes", Color.DarkRed));
                             break;
                     }
                     netClient.Recycle(im);
@@ -221,6 +243,11 @@ namespace netchat
         private void richTextBox1_TextChanged(object sender, EventArgs e)
         {
 
+        }
+
+        private void exitButton_Click(object sender, EventArgs e)
+        {
+            System.Windows.Forms.Application.Exit();
         }
     }
 }

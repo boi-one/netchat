@@ -1,6 +1,6 @@
 ﻿namespace netchat
 {
-    partial class netchatform
+    partial class NetChatForm
     {
         /// <summary>
         ///  Required designer variable.
@@ -82,6 +82,7 @@
             join.TabIndex = 5;
             join.Text = "join";
             join.UseVisualStyleBackColor = true;
+            join.Click += join_Click;
             // 
             // host
             // 
@@ -128,7 +129,7 @@
             chatbox.Text = "";
             chatbox.TextChanged += richTextBox1_TextChanged;
             // 
-            // netchatform
+            // NetChatForm
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
@@ -143,7 +144,7 @@
             Controls.Add(ipfield);
             Controls.Add(port);
             Controls.Add(ip);
-            Name = "netchatform";
+            Name = "NetChatForm";
             Text = "netchat";
             Load += Form1_Load;
             ResumeLayout(false);
