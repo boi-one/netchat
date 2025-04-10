@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(NetChatForm));
             ip = new Label();
             port = new Label();
             ipfield = new TextBox();
@@ -121,10 +122,10 @@
             namefield.PlaceholderText = "Default Johnson";
             namefield.Size = new Size(100, 23);
             namefield.TabIndex = 9;
-            namefield.TextChanged += textBox2_TextChanged_1;
             // 
             // chatbox
             // 
+            chatbox.Enabled = false;
             chatbox.Location = new Point(15, 42);
             chatbox.Name = "chatbox";
             chatbox.Size = new Size(773, 372);
@@ -147,6 +148,8 @@
             Controls.Add(ipfield);
             Controls.Add(port);
             Controls.Add(ip);
+            FormBorderStyle = FormBorderStyle.FixedSingle;
+            Icon = (Icon)resources.GetObject("$this.Icon");
             Name = "NetChatForm";
             Text = "netchat";
             Load += Form1_Load;

@@ -5,22 +5,34 @@ using System.Windows.Forms;
 
 namespace netchat
 {
+    struct Address
+    {
+        public string ip;
+        public int port;
+
+        public Address(string ip, int port)
+        {
+            this.ip = ip;
+            this.port = port;
+        }
+    }
+
     public partial class NetChatForm : Form
     {
         private static NetServer netServer;
         private static NetClient netClient;
+        private static string username;
 
         public NetChatForm()
         {
             InitializeComponent();
-            input.KeyDown += new KeyEventHandler(BoxKeyDown);
-        }
+            input.KeyDown += new KeyEventHandler(BoxKeyDown);        }
 
         private void BoxKeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter && input.Text.Length > 0)
             {
-                SendMessage(input.Text);
+                SendMessage($"{username}: { input.Text}");
                 input.Text = "";
                 e.Handled = true;
                 e.SuppressKeyPress = true;
@@ -37,49 +49,45 @@ namespace netchat
 
         }
 
+        Address SetAddress(string ip, int port)
+        {
+            if (portfield.Text.Length > 0) port = Convert.ToInt32(portfield.Text);
+            if (ip.Length < 7) ip = ipfield.PlaceholderText;
+            if (port < 1000) port = Convert.ToInt32(portfield.PlaceholderText);
+
+            return new Address(ip, port);
+        }
+
         private void host_Click(object sender, EventArgs e)
         {
-            if (portfield.Text.Length < 4)
-            {
-                SystemSounds.Exclamation.Play();
-                MessageBox.Show("Needs to be a valid port.", "Warning.", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            else
-            {
-                host.Enabled = false;
-                join.Enabled = false;
-                ipfield.Enabled = false;
-                portfield.Enabled = false;
-                input.Enabled = false; //remove if the host also wants to talk
-                Thread serverThread = new Thread(() => Server("127.0.0.1", /*Convert.ToInt32(portfield.Text)*/8888));
-                serverThread.IsBackground = true;
-                serverThread.Start();
-            }
+            host.Enabled = false;
+            join.Enabled = false;
+            ipfield.Enabled = false;
+            portfield.Enabled = false;
+            input.Enabled = false; //remove if the host also wants to talk
+
+            string ip = ipfield.Text;
+            int port = 0;
+            Address address = SetAddress(ip, port);        
+
+            Thread serverThread = new Thread(() => Server(address.ip, address.port));
+            serverThread.IsBackground = true;
+            serverThread.Start();
+            ipfield.Text = ip;
         }
 
         private void join_Click(object sender, EventArgs e)
         {
-            if (portfield.Text.Length < 4)
-            {
-                SystemSounds.Exclamation.Play();
-                MessageBox.Show("Needs to be a valid port.", "Warning.", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-            else
-            {
-                host.Enabled = false;
-                join.Enabled = false;
-                ipfield.Enabled = false;
-                portfield.Enabled = false;
-                Client();
-            }
+            host.Enabled = false;
+            join.Enabled = false;
+            ipfield.Enabled = false;
+            portfield.Enabled = false;
+            if (namefield.Text.Length < 1) username = namefield.PlaceholderText;
+            else username = namefield.Text;
+            Client();
         }
 
         private void textBox2_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void textBox2_TextChanged_1(object sender, EventArgs e)
         {
 
         }
@@ -116,7 +124,7 @@ namespace netchat
 
         private void Server(string ip, int port)
         {
-            if (InvokeRequired) Invoke(() => LocalNewLine("hosting...", Color.DarkGoldenrod));
+            if (InvokeRequired) Invoke(() => LocalNewLine($"hosting at {ip} on port: {port}...", Color.DarkGoldenrod));
 
             NetPeerConfiguration config = new NetPeerConfiguration("netchat");
             config.MaximumConnections = 5;
@@ -173,7 +181,10 @@ namespace netchat
         {
             netClient = new NetClient(new("netchat"));
             netClient.Start();
-            netClient.Connect(/*ipfield.Text*/"127.0.0.1", 8888/*Convert.ToInt32(portfield.Text)*/);
+            string ip = ipfield.Text;
+            int port = 0;
+            Address address = SetAddress(ip, port);
+            netClient.Connect(address.ip, address.port);
             Thread clientThread = new Thread(() =>
             {
                 ListenForMessages();
